@@ -45,7 +45,7 @@ setup(
     app=APP,
     name=NAME,
     version=about['__version__'],
-    description="cap、 touch、 remote control for android via adb",
+    description="screencap, touch, remote control for android devices via adb",
     long_description=readme + '\n\n' + history,
     long_description_content_type='text/markdown',
     author="zlols",
