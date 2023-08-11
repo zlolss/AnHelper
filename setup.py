@@ -10,7 +10,7 @@ import os
 here = os.path.abspath(os.path.dirname(__file__))
 NAME = 'anhelper'
 REQUIRES_PYTHON = '>=3.0.0'
-REQUIRED_DEP = ['adbutils', 'opencv-python']
+REQUIRED_DEP = ['adbutils', 'opencv-python', 'flask', 'socketman']
 readme = ''
 about = {}
 history = 'None'

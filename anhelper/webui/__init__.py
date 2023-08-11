@@ -101,6 +101,7 @@ class WebUI(threading.Thread):
     
     def run(self):
         self.websocket_server.start()
+        #print('socket start')
         self.contact = self.minitouch.useContact()
         self.server.serve_forever()
         '''    
