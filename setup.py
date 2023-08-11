@@ -17,7 +17,7 @@ history = 'None'
 with open(os.path.join(here, 'anhelper', 'version.py')) as f:
     exec(f.read(), about)
 
-with open(os.path.join(here, 'doc', "README.md"), "rb") as readme_file:
+with open(os.path.join(here, "README.md"), "rb") as readme_file:
     readme = readme_file.read().decode("UTF-8")
 
 #with open("HISTORY.rst", "rb") as history_file:
@@ -47,6 +47,7 @@ setup(
     version=about['__version__'],
     description="cap、 touch、 remote control for android via adb",
     long_description=readme + '\n\n' + history,
+    long_description_content_type='text/markdown',
     author="zlols",
     author_email='zlols@foxmail.com',
     url='https://github.com/zlolss/AnHelper',
