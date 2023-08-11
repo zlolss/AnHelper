@@ -1,0 +1,2 @@
+global-include *.html *.js *css
+graft anhelper/prebuild
