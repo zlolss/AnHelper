@@ -492,3 +492,11 @@ ui.stop()
 ```python
 
 ```
+
+# 包含开源项目许可声明
+
+[minicap](https://github.com/DeviceFarmer/minicap/blob/master/LICENSE)
+
+[minitouch](https://github.com/DeviceFarmer/minitouch/blob/master/LICENSE)
+
+[ADBKeyBoard](https://github.com/senzhk/ADBKeyBoard/blob/master/LICENSE)
