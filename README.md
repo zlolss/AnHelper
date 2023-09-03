@@ -31,6 +31,7 @@ anhelper-demo
 
 # 已知问题
 - 实体机上可能存在输入设备写入权限问题，导致minitouch无法运行。需要adb获取root权限。
+- 部分机器需要手动在设置中开启ADBKeyboard并且手动切换输入法才可用。
 
 # 用于安卓控制的同类开源项目推荐
 - [uiautomator2](https://github.com/openatx/uiautomator2)
