@@ -1,2 +1,2 @@
 python anhelper/demo.py
-#pause
+pause

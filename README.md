@@ -436,7 +436,7 @@ IFrame( ui.url, width='100%',height='400px')
     
 
     正在部署minicap。。。ok
-    
+   
 
     127.0.0.1 - - [29/Jul/2023 23:56:16] "GET /video_feed HTTP/1.1" 200 -
     
@@ -501,3 +501,9 @@ ui.stop()
 [minitouch](https://github.com/DeviceFarmer/minitouch/blob/master/LICENSE)
 
 [ADBKeyBoard](https://github.com/senzhk/ADBKeyBoard/blob/master/LICENSE)
+
+[vue](https://github.com/vuejs/core/blob/main/LICENSE)
+
+[pure.css](https://github.com/pure-css/pure/blob/master/LICENSE)
+
+[fontawesome](https://fontawesome.com/license/free)

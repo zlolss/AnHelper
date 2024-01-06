@@ -2,38 +2,21 @@
 <html>
 	<head>
 		<title>Anhelper v{{version}}</title>
-		
-		<link
-			rel="stylesheet"
-			href='https://unpkg.com/element-plus/dist/index.css'
-		/>
-		
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href='{{url_for("static", filename="pure.css")}}'/>
+		<link rel="stylesheet" href='{{url_for("static", filename="style.css")}}'/>
+		<link rel="stylesheet" href='{{url_for("static", filename="fontawesome/css/all.css")}}'/>
 		<style>
-			body { user-select:none; -webkit-user-drag:none; }
+			body { user-select:none; -webkit-user-drag:none;}
 		</style>
 		
-		<script src='https://unpkg.com/vue@3'></script>
-		<script src='https://unpkg.com/element-plus'></script>
+		<script src='{{url_for("static", filename="vue.global.js")}}'></script>
 		
 		<script type="module">
-			//import { createApp } from '{{url_for("static", filename="vue.esm-browser.js")}}'
 			const {createApp, reactive, toRefs, ref} = Vue;
-			const {ElLoading} = ElementPlus;
 			import Socket from '{{url_for("static", filename="socket.js")}}';
 			import VTouch from '{{url_for("static", filename="vtouch.js")}}';
-			//function onloadimg(){
-			//	console.log(this)
-			//}
-			
 			const openFullScreen2 = () => {
-				const loading = ElLoading.service({
-					lock: true,
-					text: '正在加载脑。。。',
-					background: 'rgba(0, 0, 0, 0.7)',
-				})
-				setTimeout(() => {
-					loading.close()
-				}, 6000)
 			}
 			
 			const vueapp = createApp(
@@ -44,7 +27,8 @@
 						ws: null,
 						pause: false,
 						pause_btn_enable: true,
-						vtouch: null
+						vtouch: null,
+						inputText: ""
 					}
 				},
 				computed: {
@@ -53,99 +37,112 @@
 					}
 				},
 				created(){
-					this.ws = new Socket("{{websocket_url}}")
-					this.ws.onreceive = msg=>{
-						//this.message = msg
+					let that = this
+					that.ws = new Socket("{{websocket_url}}")
+					that.ws.onreceive = msg=>{
 						const params = JSON.parse(msg)
 						for(const key in params){
-							if (key in this){
+							if (key in that){
 								console.log(params[key])
-								console.log(this[key])
-								this[key] = params[key]
+								console.log(that[key])
+								that[key] = params[key]
 							}
 						}
 					}
-					//this.
-					//this.ws.send('hello server')
+					document.onkeypress = function(e){
+						var keycode = document.all ? event.keyCode : e.which;
+						if(keycode == 13){
+							that.anString()
+							that.$refs.inputBox.blur()
+						}
+					}
 				},
 				mounted(){
 					openFullScreen2()
 					this.ws.connect()
-					//const touchpanel = document.getElementById("vtouch1");
-					//console.log(this.vtouch1)
 					this.vtouch = new VTouch(this.$refs.vtouch1, (a,x,y)=>{
-						//console.log([a,x,y])
 						this.ws.send(JSON.stringify({action:[a,x,y]}))
 						})
-					//this.ws.send('mounted')
+					this.$refs.inputBox.focus()
 				},
 				methods:{
 					resume(){
 						this.pause_btn_enable = false
 						setTimeout(()=>{
-							//console.log(this);
 							this.ws.send(JSON.stringify({ pause: false }));this.pause_btn_enable=true;
 							}
 							, 1000)
-						//this.ws.send(JSON.stringify({ pause: false }))
 					},
 					exitapp(){
-						//this.pause_btn_enable = false
 						this.pause_btn_enable = false
 						this.ws.send(JSON.stringify({ running: false }));
 						setTimeout(()=>{
-							//console.log(this);
-							//this.ws.send(JSON.stringify({ running: false }));
 							this.ws.close();
 							window.open('','_self').close();
-							//this.pause_btn_enable=true;
 							}
 							, 1000)
-						//this.ws.send(JSON.stringify({ pause: false }))
-					}//,
-					//onloadimg(){
-					//	console.log(this.$refs.vtouch1)
-					//}
+					},
+					anButton(key){
+						// 发送android按钮事件
+						this.ws.send(JSON.stringify({ button: key }));
+						//console.log(key)
+					},
+					anString(){
+						//console.log(this.inputText)
+						this.ws.send(JSON.stringify({ string: this.inputText }));
+					}
 				}
 			});
-			vueapp.use(ElementPlus).mount('#app')
-
+			vueapp.mount('#app')
 		</script>
 	</head>
-	
 	<body >
-
-		<div class="common-layout" id="app">
-		<el-container>
-		<el-header>
-			<h1>远程控制：{{device_id}}</h1>
-			
-		</el-header>
-		<el-main onselectstart="return false;">
-			<!-- <img src="{{ url_for('video_feed') }}" width='100%'> --> 
-			<el-container>
-				<el-text class=""> 点击下面的屏幕镜像可以控制安卓设备 </el-text>
-				<el-text class=""> </el-text>
-			</el-container>
-			<el-container >
-				
-				<img ref="vtouch1" style="width: 100%" src="{{ url_for('video_feed') }}" fit="contain" draggable="false"  onselectstart="return false;" />
-				
-			</el-container>
-			
-		</el-main>
-		<el-footer>
-			<el-container>
-				<el-text v-if="pause" class="mx-1">已暂停。</el-text>
-				<el-button v-if="pause" type="primary" round @click="resume" :loading="pause_btn_disabled">点击继续</el-button>
-				<el-button type="danger" round @click="exitapp" :loading="pause_btn_disabled">关闭</el-button>
-			</el-container>
-		</el-footer>
-		</el-container>
-	</div>
-	
-	
-	
-</body>
+		<div class="common-layout window-size vertical-center" id="app">
+			<div class="pure-g">
+				<div class="pure-u-20-24">
+					<h1>远程控制：{{device_id}}
+					</h1>
+				</div>
+				<div class="pure-u-2-24 align-center-container align-right-container" >
+					<button  class="button-error pure-button " type="danger" round @click="exitapp" :loading="pause_btn_disabled">
+						<i class="fa-solid fa-xmark"></i>
+						关闭
+					</button>
+				</div>
+			</div>
+			<div class="pure-g" onselectstart="return false;">
+					<!-- <img src="{{ url_for('video_feed') }}" width='100%'> --> 
+				<div class="pure-u-22-24" >
+					<img ref="vtouch1" style="cursor: pointer;" class="pure-img" width='100%' src="{{ url_for('video_feed') }}" fit="contain" draggable="false"  onselectstart="return false;" />	
+				</div>
+				<div class="vertical-container">
+					<div class="align-bottom" style="margin-left: 3px;">
+						<button class="pure-button icon-container block" type="button" @click="anButton('menu')">
+							<i class="fa-solid fa-bars"></i>
+						</button>
+						<button class="pure-button icon-container block" type="button" @click="anButton('home')">
+							<i class="fa-regular fa-circle"></i>
+						</button>
+						<button class="pure-button icon-container block" type="button" @click="anButton('back')">
+							<i class="fa-solid fa-chevron-left"></i>
+						</button>
+						<!--
+							<text v-if="pause" class="mx-1">已暂停。</text>
+							<button class="button-success pure-button" v-if="pause" type="primary" round @click="resume" :loading="pause_btn_disabled">点击继续</button>
+					 	--> 
+					</div>
+				</div>
+			</div>
+			<div class="pure-g">
+				<div class="pure-form pure-u-22-24 align-right-container" style="margin-top: 3px; display: flex;">
+					<input ref="inputBox" v-model="inputText" @blur="$event.target.select()" type="text" class="pure-input" style="flex-grow: 1;" placeholder="文本输入框" />
+					<button class="pure-button" @click="anString">
+						发送
+						<i class="fa-regular fa-paper-plane"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+	</body>
 </html> 
 

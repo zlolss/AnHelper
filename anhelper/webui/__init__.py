@@ -1,7 +1,7 @@
 from flask import Flask, render_template, Response, request
 from werkzeug.serving import make_server
 import threading, os
-from .. import minicap, minitouch, ime, version
+from .. import minicap, minitouch, ime, version, device
 from socketman import WebsocketServer
 import json
 
@@ -20,8 +20,11 @@ class WebUI(threading.Thread):
     def __init__(self, **params):
         super().__init__()
         self.params = dict(CONST.DEFAULTPARAMS, **params)
+        self.device = device.getDevice(self.params['device_id'])
+        self.params["device_id"] = self.device.id
         self.minicap = minicap.getMinicap(self.params['device_id'])
         self.minitouch = minitouch.getMinitouch(self.params['device_id'])
+        self.ime = ime.getIME(self.params['device_id'])
         self.contact = None
         self.id = self.minicap.id if self.minicap is not None else '未连接'
         self.frameprovider = lambda :self.minicap.cap( captype=minicap.CONST.JPG, sync=True) if self.params['frame_provider'] is None else self.params['frame_provider']
@@ -44,11 +47,16 @@ class WebUI(threading.Thread):
             try:
                 switchchanges = json.loads(txt)
                 for k, v in switchchanges.items():
+                    #print(f'{k}: {v}')
                     if k == 'running' and v==False:
                         t = threading.Thread(target = self.stop)
                         t.start()
                     elif k== 'action':
                         self.doAction(*v)
+                    elif k== 'button':
+                        self.doButton(v)
+                    elif k== 'string':
+                        self.doInput(v)
                         #self.stop()
                     #print(f'{k}: {v}')
                     #self.switches[k] = v
@@ -89,6 +97,34 @@ class WebUI(threading.Thread):
                 mimetype='multipart/x-mixed-replace; boundary=frame'
                 )
 
+    def doInput(self, str):
+        self.ime.input(str)
+        pass
+
+    def doButton(self, key):
+        # todo： 发送按钮，back， home， menu
+        key = key.lower()
+        if key=='back':
+            self.device.shell('input keyevent KEYCODE_BACK')
+        elif key=='home':
+            self.device.shell('input keyevent KEYCODE_HOME')
+        elif key=='menu':
+            self.device.shell('input keyevent KEYCODE_MENU')
+        elif key=='power':
+            self.device.shell('input keyevent KEYCODE_POWER')
+        elif key=='volume_up':
+            self.device.shell('input keyevent KEYCODE_VOLUME_UP')
+        elif key=='volume_down':
+            self.device.shell('input keyevent KEYCODE_VOLUME_DOWN')
+        elif key=='volume_mute':
+            self.device.shell('input keyevent KEYCODE_VOLUME_MUTE')
+        elif key=='camera':
+            self.device.shell('input keyevent KEYCODE_CAMERA')
+        elif key=='camera_focus':
+            self.device.shell('input keyevent KEYCODE_FOCUS')
+        elif key=='scale':
+            self.device.shell('input keyevent KEYCODE_SCALE')
+        pass
 
     def doAction(self, a, x, y):
         if a=='down':
