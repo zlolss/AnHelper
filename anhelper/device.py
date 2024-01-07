@@ -135,7 +135,13 @@ class _Device:
     
     def getOrientation(self):
         #0 原始竖屏， 1 左横屏， 3 右横屏
-        return int(self.shell("dumpsys input| grep \'SurfaceOrientation:\' | head -1", readout=True).split()[-1])
+        key = 'orientation='
+        s = self.shell(f"dumpsys display | grep \'{key}\' | head -1", readout=True)
+        i = s.find(key)
+        oid = i+len(key)
+        if (len(s)<oid):
+            return 0
+        return int(s[oid])
         
         
     def getIMEInputActive(self):

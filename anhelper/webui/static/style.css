@@ -61,3 +61,10 @@
 .block{
     display: block;
 }
+
+.vdisplay{
+    margin: 0 auto;
+    max-height: 880px;
+    cursor: pointer;
+    object-fit: contain;
+}
