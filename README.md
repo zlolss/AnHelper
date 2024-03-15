@@ -51,7 +51,7 @@ c = client.Client(ensure=True)
 # 获取截图（cv2格式的bgr矩阵）
 im = c.cap()
 
-## 再notebook中显示截图 
+## 在notebook中显示截图 
 from PIL import Image
 img = Image.fromarray(c.frame[:,:,[2,1,0]])
 display(img)
