@@ -1,0 +1,1 @@
+cmd /k "conda activate py312 && python -m anhelper.server"

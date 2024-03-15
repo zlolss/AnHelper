@@ -1,1 +1,1 @@
-cmd /k "conda activate py310"
+cmd /k "conda activate py312"
