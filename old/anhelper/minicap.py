@@ -57,6 +57,11 @@ class _Client(threading.Thread):
         self.conn = None
         self.capcount = 0
         self.framecondition = threading.Condition()
+        self.__imatbuffer = None
+
+    def setIMatBuffer(self, buff):
+        # 将解析的图像复制一份到buffer
+        self.__imatbuffer = buff
         
     def __parseHeader(self):
         HEADLEN = 24
@@ -115,9 +120,16 @@ class _Client(threading.Thread):
             
             newcache['ts'] = time.time()
             newcache[CONST.JPG] = jpgbuff
+            imat = None
+            if isinstance(self.__imatbuffer, np.ndarray): # 复制每一帧到buffer
+                imat = self.decodeJPGBuff(jpgbuff, CONST.CV2)
+                np.copyto(self.__imatbuffer, imat)
             
             for ctype in self.cachetypes:
-                newcache[ctype] = self.decodeJPGBuff(jpgbuff, ctype)
+                if ctype == CONST.CV2 and (imat is not None):
+                    newcache[ctype] = imat
+                else:
+                    newcache[ctype] = self.decodeJPGBuff(jpgbuff, ctype)
                 
             self.buff = self.buff[req_len:]
         
@@ -257,6 +269,8 @@ class _Minicap:
         self.stop()
         self.start()
         
+    def setIMatBuffer(self, buff):
+        self.client.setIMatBuffer(buff)
     
     def cap(self, captype=CONST.CV2, sync = False):
         if self.stopping:

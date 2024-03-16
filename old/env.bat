@@ -1,1 +1,0 @@
-cmd /k "conda activate py310"

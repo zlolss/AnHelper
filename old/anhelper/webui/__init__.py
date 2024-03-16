@@ -11,6 +11,7 @@ class CONST:
     PACKAGEDIR = os.path.dirname(os.path.abspath(__file__))
     HTMLDIR = os.path.join(PACKAGEDIR,'templates/')
     HOMEPAGENAME = 'index.html'
+    HOMEPAGEPATH = os.path.join(HTMLDIR, HOMEPAGENAME)
     DEFAULTPARAMS = {'host':'127.0.0.1', 'port':5000, 'device_id':None, 'frame_provider': None }
 
 
@@ -22,14 +23,14 @@ class WebUI(threading.Thread):
         self.params = dict(CONST.DEFAULTPARAMS, **params)
         self.device = device.getDevice(self.params['device_id'])
         self.params["device_id"] = self.device.id
-        self.minicap = minicap.getMinicap(self.params['device_id'])
+        self.minicap = minicap.getMinicap(self.params['device_id'], maxfps=30)
         self.minitouch = minitouch.getMinitouch(self.params['device_id'])
         self.ime = ime.getIME(self.params['device_id'])
         self.contact = None
         self.id = self.minicap.id if self.minicap is not None else '未连接'
         self.frameprovider = lambda :self.minicap.cap( captype=minicap.CONST.JPG, sync=True) if self.params['frame_provider'] is None else self.params['frame_provider']
         self.stopped = False
-        app = Flask(__name__)
+        app = Flask(__name__, template_folder=CONST.HTMLDIR)
         self.app = app
         self.server = make_server(
             host = self.params['host'], 
@@ -74,6 +75,7 @@ class WebUI(threading.Thread):
             #if os.path.exists(CONST.HOMEPAGE):
             webvars = {'device_id':self.id, 'websocket_url':self.websocket_server.url, 'version' : version.version}
             print(webvars)
+            # print(CONST.HOMEPAGENAME)
             return render_template(CONST.HOMEPAGENAME, **webvars)
             return 'homepage lost.'
         
