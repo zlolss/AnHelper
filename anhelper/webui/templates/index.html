@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Anhelper v{{version}}</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href='{{url_for("static", filename="pure.css")}}'/>
+		<link rel="stylesheet" href='{{url_for("static", filename="style.css")}}'/>
+		<link rel="stylesheet" href='{{url_for("static", filename="fontawesome/css/all.css")}}'/>
+		<style>
+			body { user-select:none; -webkit-user-drag:none;}
+		</style>
+		
+		<script src='{{url_for("static", filename="vue.global.js")}}'></script>
+		
+		<script type="module">
+			const {createApp, reactive, toRefs, ref} = Vue;
+			import Socket from '{{url_for("static", filename="socket.js")}}';
+			import VTouch from '{{url_for("static", filename="vtouch.js")}}';
+			const openFullScreen2 = () => {
+			}
+			
+			const vueapp = createApp(
+			{
+				data() {
+					return {
+						message: 'Hello!',
+						ws: null,
+						pause: false,
+						pause_btn_enable: true,
+						vtouch: null,
+						inputText: ""
+					}
+				},
+				computed: {
+					pause_btn_disabled(){
+						return this.pause_btn_enable?false:true
+					}
+				},
+				created(){
+					let that = this
+					that.ws = new Socket("{{websocket_url}}")
+					that.ws.onreceive = msg=>{
+						const params = JSON.parse(msg)
+						for(const key in params){
+							if (key in that){
+								console.log(params[key])
+								console.log(that[key])
+								that[key] = params[key]
+							}
+						}
+					}
+					document.onkeypress = function(e){
+						var keycode = document.all ? event.keyCode : e.which;
+						if(keycode == 13){
+							that.anString()
+							that.$refs.inputBox.blur()
+						}
+					}
+				},
+				mounted(){
+					openFullScreen2()
+					this.ws.connect()
+					this.vtouch = new VTouch(this.$refs.vtouch1, (a,x,y)=>{
+						this.ws.send(JSON.stringify({action:[a,x,y]}))
+						})
+					this.$refs.inputBox.focus()
+				},
+				methods:{
+					resume(){
+						this.pause_btn_enable = false
+						setTimeout(()=>{
+							this.ws.send(JSON.stringify({ pause: false }));this.pause_btn_enable=true;
+							}
+							, 1000)
+					},
+					exitapp(){
+						this.pause_btn_enable = false
+						this.ws.send(JSON.stringify({ running: false }));
+						setTimeout(()=>{
+							this.ws.close();
+							window.open('','_self').close();
+							}
+							, 1000)
+					},
+					anButton(key){
+						// 发送android按钮事件
+						this.ws.send(JSON.stringify({ button: key }));
+						//console.log(key)
+					},
+					anString(){
+						//console.log(this.inputText)
+						this.ws.send(JSON.stringify({ string: this.inputText }));
+					}
+				}
+			});
+			vueapp.mount('#app')
+		</script>
+	</head>
+	<body >
+		<div class="common-layout window-size vertical-center" id="app">
+			<div class="pure-g">
+				<div class="pure-u-20-24">
+					<h1>远程控制：{{device_id}}
+					</h1>
+				</div>
+				<div class="pure-u-2-24 align-center-container align-right-container" >
+					<button  class="button-error pure-button " type="danger" round @click="exitapp" :loading="pause_btn_disabled">
+						<i class="fa-solid fa-xmark"></i>
+						关闭
+					</button>
+				</div>
+			</div>
+			<div class="pure-g" onselectstart="return false;">
+					<!-- <img src="{{ url_for('video_feed') }}" width='100%'> --> 
+				<div class="pure-u-22-24" >
+					<img ref="vtouch1" class="pure-img vdisplay" src="{{ url_for('video_feed') }}" draggable="false"  onselectstart="return false;" />	
+				</div>
+				<div class="vertical-container">
+					<div class="align-bottom" style="margin-left: 3px;">
+						<button class="pure-button icon-container block" type="button" @click="anButton('menu')">
+							<i class="fa-solid fa-bars"></i>
+						</button>
+						<button class="pure-button icon-container block" type="button" @click="anButton('home')">
+							<i class="fa-regular fa-circle"></i>
+						</button>
+						<button class="pure-button icon-container block" type="button" @click="anButton('back')">
+							<i class="fa-solid fa-chevron-left"></i>
+						</button>
+						<!--
+							<text v-if="pause" class="mx-1">已暂停。</text>
+							<button class="button-success pure-button" v-if="pause" type="primary" round @click="resume" :loading="pause_btn_disabled">点击继续</button>
+					 	--> 
+					</div>
+				</div>
+			</div>
+			<div class="pure-g">
+				<div class="pure-form pure-u-22-24 align-right-container" style="margin-top: 3px; display: flex;">
+					<input ref="inputBox" v-model="inputText" @blur="$event.target.select()" type="text" class="pure-input" style="flex-grow: 1;" placeholder="文本输入框" />
+					<button class="pure-button" @click="anString">
+						发送
+						<i class="fa-regular fa-paper-plane"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+	</body>
+</html> 
+

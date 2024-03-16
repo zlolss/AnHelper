@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Anhelper v{{version}}</title>
+		
+		<link
+			rel="stylesheet"
+			href='https://unpkg.com/element-plus/dist/index.css'
+		/>
+		
+		<style>
+			body { user-select:none; -webkit-user-drag:none; }
+		</style>
+		
+		<script src='https://unpkg.com/vue@3'></script>
+		<script src='https://unpkg.com/element-plus'></script>
+		
+		<script type="module">
+			//import { createApp } from '{{url_for("static", filename="vue.esm-browser.js")}}'
+			const {createApp, reactive, toRefs, ref} = Vue;
+			const {ElLoading} = ElementPlus;
+			import Socket from '{{url_for("static", filename="socket.js")}}';
+			import VTouch from '{{url_for("static", filename="vtouch.js")}}';
+			//function onloadimg(){
+			//	console.log(this)
+			//}
+			
+			const openFullScreen2 = () => {
+				const loading = ElLoading.service({
+					lock: true,
+					text: '正在加载脑。。。',
+					background: 'rgba(0, 0, 0, 0.7)',
+				})
+				setTimeout(() => {
+					loading.close()
+				}, 6000)
+			}
+			
+			const vueapp = createApp(
+			{
+				data() {
+					return {
+						message: 'Hello!',
+						ws: null,
+						pause: false,
+						pause_btn_enable: true,
+						vtouch: null
+					}
+				},
+				computed: {
+					pause_btn_disabled(){
+						return this.pause_btn_enable?false:true
+					}
+				},
+				created(){
+					this.ws = new Socket("{{websocket_url}}")
+					this.ws.onreceive = msg=>{
+						//this.message = msg
+						const params = JSON.parse(msg)
+						for(const key in params){
+							if (key in this){
+								console.log(params[key])
+								console.log(this[key])
+								this[key] = params[key]
+							}
+						}
+					}
+					//this.
+					//this.ws.send('hello server')
+				},
+				mounted(){
+					openFullScreen2()
+					this.ws.connect()
+					//const touchpanel = document.getElementById("vtouch1");
+					//console.log(this.vtouch1)
+					this.vtouch = new VTouch(this.$refs.vtouch1, (a,x,y)=>{
+						//console.log([a,x,y])
+						this.ws.send(JSON.stringify({action:[a,x,y]}))
+						})
+					//this.ws.send('mounted')
+				},
+				methods:{
+					resume(){
+						this.pause_btn_enable = false
+						setTimeout(()=>{
+							//console.log(this);
+							this.ws.send(JSON.stringify({ pause: false }));this.pause_btn_enable=true;
+							}
+							, 1000)
+						//this.ws.send(JSON.stringify({ pause: false }))
+					},
+					exitapp(){
+						//this.pause_btn_enable = false
+						this.pause_btn_enable = false
+						this.ws.send(JSON.stringify({ running: false }));
+						setTimeout(()=>{
+							//console.log(this);
+							//this.ws.send(JSON.stringify({ running: false }));
+							this.ws.close();
+							window.open('','_self').close();
+							//this.pause_btn_enable=true;
+							}
+							, 1000)
+						//this.ws.send(JSON.stringify({ pause: false }))
+					}//,
+					//onloadimg(){
+					//	console.log(this.$refs.vtouch1)
+					//}
+				}
+			});
+			vueapp.use(ElementPlus).mount('#app')
+
+		</script>
+	</head>
+	
+	<body >
+
+		<div class="common-layout" id="app">
+		<el-container>
+		<el-header>
+			<h1>远程控制：{{device_id}}</h1>
+			
+		</el-header>
+		<el-main onselectstart="return false;">
+			<!-- <img src="{{ url_for('video_feed') }}" width='100%'> --> 
+			<el-container>
+				<el-text class=""> 点击下面的屏幕镜像可以控制安卓设备 </el-text>
+				<el-text class=""> </el-text>
+			</el-container>
+			<el-container >
+				
+				<img ref="vtouch1" style="width: 100%" src="{{ url_for('video_feed') }}" fit="contain" draggable="false"  onselectstart="return false;" />
+				
+			</el-container>
+			
+		</el-main>
+		<el-footer>
+			<el-container>
+				<el-text v-if="pause" class="mx-1">已暂停。</el-text>
+				<el-button v-if="pause" type="primary" round @click="resume" :loading="pause_btn_disabled">点击继续</el-button>
+				<el-button type="danger" round @click="exitapp" :loading="pause_btn_disabled">关闭</el-button>
+			</el-container>
+		</el-footer>
+		</el-container>
+	</div>
+	
+	
+	
+</body>
+</html> 
+
